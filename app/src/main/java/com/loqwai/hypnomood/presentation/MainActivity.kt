@@ -73,14 +73,22 @@ fun mapOffsetToFontSize(screenWidth: Dp, mood:Int, score: Int = 5): TextUnit {
 @Composable
 fun WearApp() {
     HypnoMoodTheme {
+        val moodLineSize = 10 * (fontSize.value + fontSpacing.value)
+        fun getTargetOffset(moodScore:Int):Float {
+            return moodLineSize * (moodScore.toFloat() /11f) - (moodLineSize/2) + fontSize.value + (fontSpacing.value/2)
+        }
+
         var moodScore by remember { mutableStateOf(5) }
 
-        val animatableOffset = remember { Animatable(0f) }
+        val animatableOffset = remember { Animatable(getTargetOffset(moodScore)) }
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
         val scope = rememberCoroutineScope()
         var targetOffset by remember { mutableFloatStateOf(0f) }
-        val moodLineSize = 10 * (fontSize.value + fontSpacing.value)
+
         var dragOffset by remember { mutableFloatStateOf(moodLineSize/2) }
+
+
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -91,7 +99,8 @@ fun WearApp() {
                             //make dragOffset snap to the nearest score. remember the numbers are 20dp apart
                             moodScore = min(moodScore,9)
                             moodScore = max(moodScore,0)
-                            targetOffset = (moodLineSize * (moodScore.toFloat() /11f)) - (moodLineSize/2) + fontSize.value + (fontSpacing.value/2)
+                            targetOffset = getTargetOffset(moodScore)
+
                             scope.launch {
                                 animatableOffset.animateTo(
                                     targetOffset,
@@ -112,17 +121,8 @@ fun WearApp() {
                     )
                 },
             contentAlignment = Alignment.Center
+
         ) {
-            Row(
-                modifier = Modifier.wrapContentWidth()
-                    .offset(y = -40.dp)
-            ){
-                Text(
-                    text = dragOffset.toString(),
-                    fontSize = 18.sp,  // Dynamically scale the font size
-                    textAlign = TextAlign.Center
-                )
-            }
             Row(
                 modifier = Modifier
                     .wrapContentWidth(unbounded = true)
@@ -140,26 +140,11 @@ fun WearApp() {
                     )
                 }
             }
+            Row(){
+                Text( text= moodScore.toString(),
+                      modifier = Modifier.offset(y=50.dp)
+                )
 
-            Row(
-                modifier = Modifier.wrapContentWidth()
-                    .offset(y = 40.dp)
-            ){
-                Text(
-                    text = moodScore.toString(),
-                    fontSize = 14.sp,  // Dynamically scale the font size
-                    textAlign = TextAlign.Center
-                )
-            }
-            Row(
-                modifier = Modifier.wrapContentWidth()
-                    .offset(y = 60.dp, x = 0.dp)
-            ){
-                Text(
-                    text = targetOffset.toString(),
-                    fontSize = 14.sp,  // Dynamically scale the font size
-                    textAlign = TextAlign.Center
-                )
             }
         }
     }
