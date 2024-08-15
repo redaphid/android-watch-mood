@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -77,9 +78,9 @@ fun WearApp() {
         val animatableOffset = remember { Animatable(0f) }
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
         val scope = rememberCoroutineScope()
-        var targetScore by remember { mutableStateOf(0f) }
+        var targetOffset by remember { mutableFloatStateOf(0f) }
         val moodLineSize = 10 * (fontSize.value + fontSpacing.value)
-        var dragOffset by remember { mutableStateOf(moodLineSize/2) }
+        var dragOffset by remember { mutableFloatStateOf(moodLineSize/2) }
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -90,10 +91,10 @@ fun WearApp() {
                             //make dragOffset snap to the nearest score. remember the numbers are 20dp apart
                             moodScore = min(moodScore,9)
                             moodScore = max(moodScore,0)
-                            targetScore = (moodLineSize * (moodScore.toFloat() /10f)) - (moodLineSize/2)
+                            targetOffset = (moodLineSize * (moodScore.toFloat() /11f)) - (moodLineSize/2) + fontSize.value + (fontSpacing.value/2)
                             scope.launch {
                                 animatableOffset.animateTo(
-                                    targetScore,
+                                    targetOffset,
                                     animationSpec = tween(durationMillis = 500)
                                 )
                             }
@@ -113,13 +114,23 @@ fun WearApp() {
             contentAlignment = Alignment.Center
         ) {
             Row(
+                modifier = Modifier.wrapContentWidth()
+                    .offset(y = -40.dp)
+            ){
+                Text(
+                    text = dragOffset.toString(),
+                    fontSize = 18.sp,  // Dynamically scale the font size
+                    textAlign = TextAlign.Center
+                )
+            }
+            Row(
                 modifier = Modifier
                     .wrapContentWidth(unbounded = true)
                     .offset(x = -animatableOffset.value.dp, y=0.dp)
             ) {
                 for (i in 0..9) {
                     val distanceFromCenter = abs(animatableOffset.value / screenWidth.value + i - moodScore)
-
+                    val scaleFactor = max(1f - 0.1f * distanceFromCenter, 0.5f)
                     Text(
                         text = i.toString(),
                         fontSize = fontSize,  // Dynamically scale the font size
@@ -129,23 +140,14 @@ fun WearApp() {
                     )
                 }
             }
-            Row(
-                modifier = Modifier.wrapContentWidth()
-                    .offset(y = 30.dp)
-            ){
-                Text(
-                    text = dragOffset.toString(),
-                    fontSize = 18.sp,  // Dynamically scale the font size
-                    textAlign = TextAlign.Center
-                )
-            }
+
             Row(
                 modifier = Modifier.wrapContentWidth()
                     .offset(y = 40.dp)
             ){
                 Text(
                     text = moodScore.toString(),
-                    fontSize = 18.sp,  // Dynamically scale the font size
+                    fontSize = 14.sp,  // Dynamically scale the font size
                     textAlign = TextAlign.Center
                 )
             }
@@ -154,8 +156,8 @@ fun WearApp() {
                     .offset(y = 60.dp, x = 0.dp)
             ){
                 Text(
-                    text = targetScore.toString(),
-                    fontSize = 24.sp,  // Dynamically scale the font size
+                    text = targetOffset.toString(),
+                    fontSize = 14.sp,  // Dynamically scale the font size
                     textAlign = TextAlign.Center
                 )
             }
